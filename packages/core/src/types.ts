@@ -29,3 +29,27 @@ export interface GeofenceEvent {
   timestamp: number;
   position: LatLon;
 }
+
+
+/** A completed trip: the vehicle moved from `start` to `end`. */
+export interface Trip {
+  kind: "trip";
+  vehicleId: string;
+  startTime: number;
+  endTime: number;
+  start: LatLon;
+  end: LatLon;
+  /** Distance travelled along the reported positions, in meters. */
+  distanceM: number;
+}
+
+/** A completed stop: the vehicle stayed at `position`. */
+export interface Stop {
+  kind: "stop";
+  vehicleId: string;
+  startTime: number;
+  endTime: number;
+  position: LatLon;
+}
+
+export type Segment = Trip | Stop;
