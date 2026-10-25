@@ -2,11 +2,12 @@
   "name": "fleet-tracking-demo",
   "private": true,
   "type": "module",
-  "workspaces": ["packages/*", "apps/*"],
+  "workspaces": ["packages/*", "apps/*", "services/*"],
   "scripts": {
     "dev": "npm run dev -w @fleet/web",
+    "publisher": "npm run start -w @fleet/publisher",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit && tsc --noEmit -p apps/web"
+    "typecheck": "tsc --noEmit && tsc --noEmit -p apps/web && tsc --noEmit -p services/publisher"
   },
   "devDependencies": {
     "typescript": "^7.0.2",

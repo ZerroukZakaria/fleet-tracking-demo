@@ -6,3 +6,4 @@ export * from "./rng";
 export * from "./simulator";
 export * from "./demo-fleet";
 export * from "./report";
+export * from "./messages";
