@@ -5,3 +5,4 @@ export * from "./trips";
 export * from "./rng";
 export * from "./simulator";
 export * from "./demo-fleet";
+export * from "./report";
