@@ -27,5 +27,33 @@ services:
       retries: 10
     restart: unless-stopped
 
+  ingest:
+    build:
+      context: .
+      args:
+        SERVICE: ingest
+    environment:
+      MQTT_URL: mqtt://mosquitto:1883
+      DATABASE_URL: postgres://fleet:fleet_local_only@postgres:5432/fleet
+    depends_on:
+      mosquitto:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  publisher:
+    build:
+      context: .
+      args:
+        SERVICE: publisher
+    environment:
+      MQTT_URL: mqtt://mosquitto:1883
+      SIM_SPEED: ${SIM_SPEED:-10}
+    depends_on:
+      ingest:
+        condition: service_started
+    restart: unless-stopped
+
 volumes:
   pgdata:

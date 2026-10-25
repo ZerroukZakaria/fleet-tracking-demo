@@ -172,7 +172,7 @@ client.on("close", () => console.log("Connection closed"));
 
 const statsTimer = setInterval(() => console.log(JSON.stringify(stats)), 10_000);
 
-process.on("SIGINT", async () => {
+const shutdown = async () => {
   console.log("\nStopping");
   clearInterval(statsTimer);
   await new Promise<void>((resolve) => client.end(false, () => resolve()));
@@ -180,4 +180,6 @@ process.on("SIGINT", async () => {
   await pool.end();
   console.log(JSON.stringify(stats));
   process.exit(0);
-});
+};
+process.on("SIGINT", shutdown);
+process.on("SIGTERM", shutdown);    

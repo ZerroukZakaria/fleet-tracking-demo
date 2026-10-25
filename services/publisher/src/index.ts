@@ -46,8 +46,10 @@ client.on("connect", () => {
 client.on("error", (err) => console.error("MQTT error:", err.message));
 client.on("close", () => console.log("Connection closed"));
 
-process.on("SIGINT", () => {
+const shutdown = () => {
   if (timer) clearInterval(timer);
   console.log("\nStopping");
   client.end(false, () => process.exit(0));
-});
+};
+process.on("SIGINT", shutdown);
+process.on("SIGTERM", shutdown);
