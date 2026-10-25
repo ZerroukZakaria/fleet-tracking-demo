@@ -57,4 +57,11 @@ export class GeofenceTracker {
 
     return events;
   }
+
+    reset(vehicleId: string): void {
+    const prefix = `${vehicleId}|`;
+    for (const key of [...this.state.keys()]) {
+      if (key.startsWith(prefix)) this.state.delete(key);
+    }
+  }
 }

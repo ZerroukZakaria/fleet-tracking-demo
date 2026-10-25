@@ -70,17 +70,20 @@ export class TripDetector {
     return this.states.get(vehicleId)?.mode;
   }
 
+  /** Close one vehicle's open segment and forget its state. */
+  flushVehicle(vehicleId: string): Segment[] {
+    const s = this.states.get(vehicleId);
+    if (!s) return [];
+    this.states.delete(vehicleId);
+    return s.mode === "moving"
+      ? this.makeTrip(vehicleId, s.start, s.last, s.distanceM)
+      : [this.makeStop(vehicleId, s)];
+  }
+
   /** Close every open segment (end of data) and reset all state. */
   flush(): Segment[] {
     const out: Segment[] = [];
-    for (const [vehicleId, s] of this.states) {
-      if (s.mode === "moving") {
-        out.push(...this.makeTrip(vehicleId, s.start, s.last, s.distanceM));
-      } else {
-        out.push(this.makeStop(vehicleId, s));
-      }
-    }
-    this.states.clear();
+    for (const id of [...this.states.keys()]) out.push(...this.flushVehicle(id));
     return out;
   }
 
