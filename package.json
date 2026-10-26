@@ -9,6 +9,7 @@
     "ingest": "npm run start -w @fleet/ingest",
     "test": "vitest run",
     "typecheck": "tsc --noEmit && tsc --noEmit -p apps/web && tsc --noEmit -p services/publisher"
+    
   },
   "devDependencies": {
     "typescript": "^7.0.2",

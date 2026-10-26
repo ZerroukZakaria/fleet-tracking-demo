@@ -5,6 +5,8 @@ geofence alerts, trips, stops and a per-vehicle report.
 
 ![The browser demo: live map, geofence alerts and fleet report](docs/demo.png)
 
+**Live demo:** https://fleet-tracking-demo.zerrouk-zakaria.workers.dev (runs the simulator and detection logic in your browser, with no MQTT or database)
+
 I built this on my own to show the kind of problems I worked on professionally:
 geolocation, geofencing, and turning a stream of telemetry into something
 useful. All the code is original and all the data is made up. The vehicles,

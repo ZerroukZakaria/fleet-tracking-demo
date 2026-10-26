@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { distanceMeters } from "./geo";
+import { distanceMeters, bearingDegrees } from "./geo";
 
 describe("distanceMeters", () => {
   it("is zero for identical points", () => {
@@ -36,4 +36,33 @@ describe("distanceMeters", () => {
     expect(d).toBeGreaterThan(20_000);
     expect(d).toBeLessThan(26_000);
   });
+
+
+
+describe("bearingDegrees", () => {
+  const origin = { lat: 0, lon: 0 };
+
+  it("points to the four compass directions", () => {
+    expect(bearingDegrees(origin, { lat: 1, lon: 0 })).toBeCloseTo(0, 6);
+    expect(bearingDegrees(origin, { lat: 0, lon: 1 })).toBeCloseTo(90, 6);
+    expect(bearingDegrees(origin, { lat: -1, lon: 0 })).toBeCloseTo(180, 6);
+    expect(bearingDegrees(origin, { lat: 0, lon: -1 })).toBeCloseTo(270, 6);
+  });
+
+  it("always returns a value from 0 up to (not including) 360", () => {
+    for (let angle = 0; angle < 360; angle += 15) {
+      const rad = (angle * Math.PI) / 180;
+      const b = bearingDegrees(origin, {
+        lat: Math.cos(rad) * 0.1,
+        lon: Math.sin(rad) * 0.1,
+      });
+      expect(b).toBeGreaterThanOrEqual(0);
+      expect(b).toBeLessThan(360);
+    }
+  });
+});
+
+
+
+
 });
