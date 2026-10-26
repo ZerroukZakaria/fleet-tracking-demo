@@ -3,6 +3,8 @@
 A small simulated fleet, and the code that turns raw GPS positions into
 geofence alerts, trips, stops and a per-vehicle report.
 
+![The browser demo: live map, geofence alerts and fleet report](docs/demo.png)
+
 I built this on my own to show the kind of problems I worked on professionally:
 geolocation, geofencing, and turning a stream of telemetry into something
 useful. All the code is original and all the data is made up. The vehicles,
