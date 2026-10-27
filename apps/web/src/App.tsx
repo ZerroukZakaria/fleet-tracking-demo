@@ -1,25 +1,57 @@
-import { useMemo, useState } from "react";
-import { DEMO_GEOFENCES, DEMO_PLANS, buildReport } from "@fleet/core";
+import { useMemo, useState, type KeyboardEvent } from "react";
+import { DEMO_PLANS, buildReport } from "@fleet/core";
 import { FleetMap } from "./FleetMap";
 import { useSimulation } from "./useSimulation";
-import { formatDuration, formatElapsed } from "./format";
+import { formatElapsed } from "./format";
+import { AlertsList, ReportTable, VehicleList } from "./panels";
+import { VehicleDetail } from "./VehicleDetail";
 
 const SPEEDS = [10, 60, 120];
 const VEHICLE_IDS = DEMO_PLANS.map((p) => p.id);
-const fenceName = (id: string) =>
-  DEMO_GEOFENCES.find((g) => g.id === id)?.name ?? id;
+
+const TABS = [
+  { id: "vehicles", label: "Vehicles" },
+  { id: "alerts", label: "Alerts" },
+  { id: "report", label: "Report" },
+] as const;
+type TabId = (typeof TABS)[number]["id"];
 
 export default function App() {
   const [running, setRunning] = useState(true);
   const [speed, setSpeed] = useState(60);
+  const [selectedId, setSelectedId] = useState(VEHICLE_IDS[0]);
+  const [tab, setTab] = useState<TabId>("vehicles");
+
   const { vehicles, elapsedMs, events, segments } = useSimulation(speed, running);
   const report = useMemo(() => buildReport(segments, VEHICLE_IDS), [segments]);
+
+  const selectedView = vehicles.find((v) => v.position.vehicleId === selectedId);
+  const selectedRow = report.find((r) => r.vehicleId === selectedId);
+  const selectedSegments = useMemo(
+    () => segments.filter((s) => s.vehicleId === selectedId),
+    [segments, selectedId],
+  );
+  const selectedEvents = useMemo(
+    () => events.filter((e) => e.vehicleId === selectedId),
+    [events, selectedId],
+  );
+
+  const onTabKeyDown = (e: KeyboardEvent<HTMLButtonElement>) => {
+    const i = TABS.findIndex((t) => t.id === tab);
+    let next: number;
+    if (e.key === "ArrowRight") next = (i + 1) % TABS.length;
+    else if (e.key === "ArrowLeft") next = (i - 1 + TABS.length) % TABS.length;
+    else return;
+    e.preventDefault();
+    setTab(TABS[next].id);
+    document.getElementById(`tab-${TABS[next].id}`)?.focus();
+  };
 
   return (
     <div className="app">
       <header className="bar">
         <h1>Fleet tracking demo</h1>
-        <button type="button" onClick={() => setRunning((r) => !r)}>
+        <button type="button" className="primary" onClick={() => setRunning((r) => !r)}>
           {running ? "Pause" : "Play"}
         </button>
         <label>
@@ -32,79 +64,59 @@ export default function App() {
             ))}
           </select>
         </label>
-        <span className="clock">Simulated time {formatElapsed(elapsedMs)}</span>
+        <span className="mono muted">Simulated time {formatElapsed(elapsedMs)}</span>
+        <span className="muted bar-note">Synthetic data</span>
       </header>
 
-      <div className="main">
-        <aside className="side" aria-label="Vehicles and alerts">
-          <section aria-labelledby="vehicles-title">
-            <h2 id="vehicles-title" className="panel-title">Vehicles</h2>
-            <ul>
-              {vehicles.map(({ position, status }) => (
-                <li key={position.vehicleId}>
-                  <strong>{position.vehicleId}</strong>
-                  <br />
-                  <span className="muted">
-                    {status}, {Math.round(position.speedKmh ?? 0)} km/h
-                  </span>
-                </li>
+      <div className="workspace">
+        <div className="left">
+          <FleetMap vehicles={vehicles} selectedId={selectedId} onSelect={setSelectedId} />
+
+          <div className="tabs-area">
+            <div className="tablist" role="tablist" aria-label="Fleet data">
+              {TABS.map((t) => (
+                <button
+                  key={t.id}
+                  id={`tab-${t.id}`}
+                  type="button"
+                  role="tab"
+                  className="tab"
+                  aria-selected={tab === t.id}
+                  aria-controls={`panel-${t.id}`}
+                  tabIndex={tab === t.id ? 0 : -1}
+                  onClick={() => setTab(t.id)}
+                  onKeyDown={onTabKeyDown}
+                >
+                  {t.label}
+                </button>
               ))}
-            </ul>
-          </section>
-
-          <section aria-labelledby="alerts-title">
-            <h2 id="alerts-title" className="panel-title">Geofence alerts</h2>
-            {events.length === 0 ? (
-              <p className="muted">No alerts yet. They appear when a vehicle enters or leaves a zone.</p>
-            ) : (
-              <ul className="alerts">
-                {events.map((ev) => (
-                  <li key={`${ev.timestamp}-${ev.vehicleId}-${ev.geofenceId}-${ev.type}`}>
-                    <span className="clock">{formatElapsed(ev.timestamp)}</span>{" "}
-                    <strong>{ev.vehicleId}</strong>{" "}
-                    {ev.type === "enter" ? "entered" : "left"} {fenceName(ev.geofenceId)}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
-        </aside>
-
-        <div className="content">
-          <FleetMap vehicles={vehicles} />
-          <section className="report" aria-labelledby="report-title">
-            <h2 id="report-title" className="panel-title">
-              Fleet report: completed trips and stops so far
-            </h2>
-            <table>
-              <caption className="sr-only">
-                Trips, distance, driving time, stops and stopped time per vehicle
-              </caption>
-              <thead>
-                <tr>
-                  <th scope="col">Vehicle</th>
-                  <th scope="col">Trips</th>
-                  <th scope="col">Distance</th>
-                  <th scope="col">Driving</th>
-                  <th scope="col">Stops</th>
-                  <th scope="col">Stopped</th>
-                </tr>
-              </thead>
-              <tbody>
-                {report.map((r) => (
-                  <tr key={r.vehicleId}>
-                    <th scope="row">{r.vehicleId}</th>
-                    <td>{r.trips}</td>
-                    <td>{(r.distanceM / 1000).toFixed(1)} km</td>
-                    <td>{formatDuration(r.drivingMs)}</td>
-                    <td>{r.stops}</td>
-                    <td>{formatDuration(r.stoppedMs)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </section>
+            </div>
+            <div
+              id={`panel-${tab}`}
+              role="tabpanel"
+              aria-labelledby={`tab-${tab}`}
+              className="tabpanel"
+              tabIndex={0}
+            >
+              {tab === "vehicles" && (
+                <VehicleList
+                  vehicles={vehicles}
+                  selectedId={selectedId}
+                  onSelect={setSelectedId}
+                />
+              )}
+              {tab === "alerts" && <AlertsList events={events} />}
+              {tab === "report" && <ReportTable report={report} />}
+            </div>
+          </div>
         </div>
+
+        <VehicleDetail
+          view={selectedView}
+          row={selectedRow}
+          segments={selectedSegments}
+          events={selectedEvents}
+        />
       </div>
     </div>
   );
